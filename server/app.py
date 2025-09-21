@@ -1,29 +1,31 @@
-#!/usr/bin/env python3
-from models import db, Restaurant, RestaurantPizza, Pizza
+from flask import Flask, jsonify
+from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from flask import Flask, request, make_response
-from flask_restful import Api, Resource
-import os
 
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-DATABASE = os.environ.get("DB_URI", f"sqlite:///{os.path.join(BASE_DIR, 'app.db')}")
+# Initialize extensions
+db = SQLAlchemy()
+migrate = Migrate()
 
-app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.json.compact = False
+def create_app():
+    app = Flask(__name__)
 
-migrate = Migrate(app, db)
+    # Config
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///pizza.db"
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-db.init_app(app)
+    # Init extensions
+    db.init_app(app)
+    migrate.init_app(app, db)
 
-api = Api(app)
+    # Import models
+    from server import models  
 
+    # Routes
+    @app.route("/")
+    def index():
+        return jsonify({"message": "Welcome to the Pizza API!"})
 
-@app.route("/")
-def index():
-    return "<h1>Code challenge</h1>"
+    return app
 
-
-if __name__ == "__main__":
-    app.run(port=5555, debug=True)
+# Expose app for `flask run`
+app = create_app()
